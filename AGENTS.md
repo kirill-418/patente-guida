@@ -12,8 +12,10 @@ Study material for the Italian driving **theory exam, category B** (patente B): 
 | `quiz/quiz-patente-{AM,Superiori,Revisione-AB,Revisione-AM,Revisione-Superiori}.md` | Other official lists (not used downstream). |
 | `quiz/images/` | 962 figures extracted from the PDFs (`ab_*`, `am_*`, `sup_*`, `revab_*`, `revam_*`, `revsup_*`). |
 | `vocab/vocabolario-rare-patente-B.md` | The dictionary: 1,637 entries in four tiers, with EN + RU translations and a quiz example each. |
-| `app/index.html` | The flip-card app. **One static file, no build step at runtime**, data embedded. |
-| `app/template.html`, `app/data.json` | App source with a `/*DATA*/` placeholder, and the compact word payload that gets injected. |
+| `app/index.html` | The flip-card app as a **standalone page** (full HTML document, data embedded, no build step at runtime). This is what servers and Docker serve. |
+| `app/artifact.html` | The same page as a fragment (no `<!doctype>`/`<head>`), for publishing as a Claude Artifact, whose host adds the skeleton itself. |
+| `app/template.html`, `app/data.json` | App source with a `/*DATA*/` placeholder, and a readable copy of the word payload (one word per line). |
+| `Dockerfile`, `docker-compose.yml`, `.dockerignore`, `docker/nginx.conf` | Run the app in nginx. See "Running with Docker". |
 | `data/ab-questions.json` | Structured B questions: `id, text, answer, chapter, group, image, page`. |
 | `data/vocab-final.json` | Final dictionary entries (input of the app build). |
 | `data/lemma-stats-ab.json` | Per-lemma stats for the B list: questions using it, general-Italian frequency rank, forms seen. |
@@ -77,9 +79,19 @@ State: `known` (set of headwords), `learning` (set of headwords marked "New"), `
 - **On Claude Artifacts** (how it was first deployed) the `db` and `user` capabilities add cross-device sync at `data/users/<uid>/vocab`. Writes are debounced 500 ms, one at a time, retried after 8 s on failure. Conflict rule: **the document with the newer `updated` wins** (on load, and for live updates from another device; echoes of own writes are ignored via `by`). The first load uses `get()` (definitive) before subscribing, so an empty cache can never overwrite server data.
 - There is **no review history/log** — only the current state. (An optional per-click review log was proposed; not approved/implemented.)
 
+## Running with Docker
+
+```sh
+docker compose up -d --build     # then open http://localhost:8080
+PORT=3000 docker compose up -d --build   # another port
+docker compose down
+```
+
+The image is `nginx:1.27-alpine` serving only `app/index.html` (the `.dockerignore` keeps everything else out of the build context). `docker/nginx.conf` adds gzip, `charset utf-8`, `no-cache` on the page, and a strict CSP (inline script/style, Google Fonts only), `nosniff` and `no-referrer`; unknown paths fall back to `index.html`. The container has a healthcheck. Tested on Colima: builds, becomes healthy, renders correctly (Cyrillic included) and runs in "Saved in this browser only" mode.
+
 ## Deploying to a normal server
 
-The app is a single static file: serve `app/index.html` with any static host (`python3 -m http.server -d app` for a quick check). Nothing to build. Notes:
+The app is a single static file: serve `app/index.html` (**not** `artifact.html`, which lacks the document wrapper and renders in quirks mode) with any static host (`python3 -m http.server -d app` for a quick check). Nothing to build. Notes:
 
 - Outside Claude there is no `window.claude`, so the code falls back automatically: the status label reads "Saved in this browser only" and progress lives in `localStorage` (per browser, per origin; not shared across devices; lost if site data is cleared).
 - For cross-device sync on your own server, replace the body of `initRemote()` in `app/template.html` with calls to your own endpoint that stores/returns the progress document above (same schema, same `updated` conflict rule), then rebuild.
@@ -97,8 +109,8 @@ Python 3 with `pymupdf` and `simplemma`; Node with `jsdom@24` for the test. The 
 5. `python3 ../tools/prep.py` → candidate words with examples, split in `vocab/in/chunk1..9.json`.
 6. Translate chunks (LLM step, see above) into `vocab/out/chunk1..9.json`.
 7. `python3 ../tools/gen_vocab.py` → `vocab/vocabolario-rare-patente-B.md`, `vocab/final.json` (copy it to `data/vocab-final.json`).
-8. From the **repo root**: `python3 tools/build_app.py` → `app/data.json`, `app/index.html`.
-9. `NODE_PATH=<dir with jsdom> node tools/test_app.js` → behavioural test of the app in jsdom with a fake db (known words never reappear, New words do, levels, undo, sync, reload, deck-finished).
+8. From the **repo root**: `python3 tools/build_app.py` → `app/data.json`, `app/index.html` (standalone), `app/artifact.html` (Claude Artifact fragment).
+9. `NODE_PATH=<dir with jsdom> node tools/test_app.js` → behavioural test of `app/artifact.html` in jsdom with a fake db (known words never reappear, New words do, levels, undo, sync, reload, deck-finished).
 
 Caveat: the scripts were written in a scratch session and their absolute paths were rewritten to the relative layout above afterwards; `build_app.py` and `test_app.js` were re-run after the move, the earlier pipeline steps were **not** re-run end-to-end from this layout. Check paths if one fails.
 

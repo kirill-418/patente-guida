@@ -1,6 +1,6 @@
 const { JSDOM } = require('jsdom');
 const fs = require('fs');
-const html = fs.readFileSync(__dirname + '/../app/index.html', 'utf8');
+const html = fs.readFileSync(__dirname + '/../app/artifact.html', 'utf8');
 // emulate publish skeleton
 const page = '<!doctype html><html><head><meta charset=utf8></head><body>' + html + '</body></html>';
 const store = {}; const writes = [];

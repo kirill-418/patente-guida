@@ -1,0 +1,10 @@
+# Run:  docker compose up -d --build   then open http://localhost:8080
+# Change the port:  PORT=3000 docker compose up -d --build
+services:
+  patente:
+    build: .
+    image: patente-guida:latest
+    container_name: patente-guida
+    ports:
+      - "${PORT:-8080}:80"
+    restart: unless-stopped

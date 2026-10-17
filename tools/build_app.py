@@ -1,7 +1,11 @@
-"""Build app/index.html from data/vocab-final.json + app/template.html.
+"""Build the app from data/vocab-final.json + app/template.html.
 
 Run from the repo root:  python3 tools/build_app.py
-Produces app/data.json (compact payload) and app/index.html (single static file).
+Produces:
+  app/data.json      readable copy of the word payload (one word per line)
+  app/index.html     standalone page for any web server / Docker (full document)
+  app/artifact.html  same page as a fragment, for publishing as a Claude Artifact
+                     (the Artifact tool adds the document skeleton itself)
 """
 import json, re
 
@@ -24,5 +28,17 @@ assert json.loads(pretty) == json.loads(payload)
 open('app/data.json', 'w').write(pretty)
 tpl = open('app/template.html').read()
 assert tpl.count('/*DATA*/') == 1
-open('app/index.html', 'w').write(tpl.replace('/*DATA*/', payload))
-print(f'{len(rows)} words, index.html {len(tpl) + len(payload)} bytes')
+fragment = tpl.replace('/*DATA*/', payload)
+open('app/artifact.html', 'w').write(fragment)
+
+# Same skeleton the Artifact host wraps around the fragment: charset, viewport and a small reset.
+# The page relies on [hidden]{display:none!important}, so the reset is required.
+SKELETON_HEAD = (
+    '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
+    '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n'
+    '<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}'
+    'body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>\n'
+    '</head>\n<body>\n'
+)
+open('app/index.html', 'w').write(SKELETON_HEAD + fragment + '\n</body>\n</html>\n')
+print(f'{len(rows)} words; app/index.html (standalone) and app/artifact.html (fragment) written')
