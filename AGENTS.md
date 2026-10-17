@@ -87,16 +87,17 @@ PORT=3000 docker compose up -d --build   # another port
 docker compose down
 ```
 
-The image is `nginx:1.27-alpine` serving only `app/index.html` (the `.dockerignore` keeps everything else out of the build context). `docker/nginx.conf` adds gzip, `charset utf-8`, `no-cache` on the page, and a strict CSP (inline script/style, Google Fonts only), `nosniff` and `no-referrer`; unknown paths fall back to `index.html`. The container has a healthcheck. Tested on Colima: builds, becomes healthy, renders correctly (Cyrillic included) and runs in "Saved in this browser only" mode.
+The image is based on `python:3.12-alpine` running `docker/server.py`. It serves the flip-card app `app/index.html` with gzip, security headers (CSP, nosniff, no-referrer), and provides `/api/progress` with persistent storage on disk (mounted at `/data`, mapped to `./storage` on the host in `docker-compose.yml`). On container startup, progress is restored from `/data/progress.json`. Healthcheck queries `/health`.
 
 ## Deploying to a normal server
 
-The app is a single static file: serve `app/index.html` (**not** `artifact.html`, which lacks the document wrapper and renders in quirks mode) with any static host (`python3 -m http.server -d app` for a quick check). Nothing to build. Notes:
+The app can be run via Docker or as a static file:
 
-- Outside Claude there is no `window.claude`, so the code falls back automatically: the status label reads "Saved in this browser only" and progress lives in `localStorage` (per browser, per origin; not shared across devices; lost if site data is cleared).
-- For cross-device sync on your own server, replace the body of `initRemote()` in `app/template.html` with calls to your own endpoint that stores/returns the progress document above (same schema, same `updated` conflict rule), then rebuild.
-- The only external request is Google Fonts (Barlow, Barlow Condensed) with system-font fallbacks. If you set a strict CSP, allow `fonts.googleapis.com` and `fonts.gstatic.com`, or self-host the fonts.
-- Use HTTPS. Do not add analytics that would record which words a user marks.
+- **With Docker / `docker/server.py`:** Progress persists to disk (`/data/progress.json`) and synchronizes automatically between devices (phone and desktop) via `/api/progress`.
+- **Pure static hosting:** Without the server API or Claude Artifacts, the code gracefully falls back to `localStorage` ("Saved in this browser only").
+- **On Claude Artifacts:** Progress syncs via `window.claude` DB (`data/users/<uid>/vocab`).
+- The only external request is Google Fonts (Barlow, Barlow Condensed) with system-font fallbacks.
+- Use HTTPS in production. Do not add analytics that would record which words a user marks.
 
 ## Rebuilding things
 

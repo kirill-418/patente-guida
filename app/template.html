@@ -218,7 +218,7 @@ footer { font-size: 0.75rem; color: var(--muted); text-align: center; }
 
   var sid = Math.random().toString(36).slice(2);
   var dbDoc = null, dirty = false, writing = false, timer = null;
-  var SYNC = { local: 'Saved in this browser only', saving: 'Saving…', synced: 'Synced to your account', error: 'Not synced, will retry' };
+  var SYNC = { local: 'Saved in this browser only', saving: 'Saving…', synced: 'Synced', error: 'Not synced, will retry' };
   function setSync(s) { var el = $('sync'); el.dataset.s = s; el.textContent = SYNC[s]; }
 
   function touch() {
@@ -239,30 +239,84 @@ footer { font-size: 0.75rem; color: var(--muted); text-align: center; }
     });
   }
 
+  var httpBackend = {
+    get: function () {
+      return fetch('/api/progress').then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      }).then(function (d) {
+        var hasData = d && typeof d === 'object' && ((d.known && d.known.length) || (d.learning && d.learning.length) || d.updated);
+        return {
+          exists: !!hasData,
+          data: function () { return d; }
+        };
+      });
+    },
+    set: function (data) {
+      return fetch('/api/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      }).then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      });
+    },
+    onSnapshot: function (cb, errCb) {
+      function poll() {
+        if (dirty || writing) return;
+        fetch('/api/progress').then(function (r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.json();
+        }).then(function (d) {
+          var hasData = d && typeof d === 'object' && ((d.known && d.known.length) || (d.learning && d.learning.length) || d.updated);
+          cb({ exists: !!hasData, data: function () { return d; } });
+        }).catch(function (e) {
+          if (errCb) errCb(e);
+        });
+      }
+      setInterval(poll, 15000);
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') poll();
+      });
+      window.addEventListener('focus', poll);
+    }
+  };
+
+  function setupDoc(doc) {
+    dbDoc = doc;
+    return doc.get().then(function (snap) {
+      var d = snap && snap.exists ? snap.data() : null;
+      if (d && (d.updated || 0) >= st.updated) {
+        adopt(d); pickIfStale(); render(); setSync('synced');
+      } else if (st.updated > 0) {
+        dirty = true; setSync('saving'); flush();
+      } else { setSync('synced'); }
+      doc.onSnapshot(function (s) {
+        var x = s && s.exists ? s.data() : null;
+        if (!x || x.by === sid || (x.updated || 0) <= st.updated) return;
+        adopt(x); history = []; pickIfStale(); render();
+      }, function () { setSync('error'); });
+    });
+  }
+
   function initRemote() {
     var c = window.claude;
-    if (!c || !c.use) { setSync('local'); return; }
-    Promise.all([c.use('db'), c.use('user')]).then(function (r) {
-      var db = r[0], user = r[1];
-      return (user ? user.id() : Promise.resolve(null)).then(function (uid) {
-        if (!db || !uid) { setSync('local'); return; }
-        var doc = db.doc('data/users/' + uid + '/vocab');
-        return doc.get().then(function (snap) {
-          var d = snap.exists ? snap.data() : null;
-          dbDoc = doc;
-          if (d && (d.updated || 0) >= st.updated) {
-            adopt(d); pickIfStale(); render(); setSync('synced');
-          } else if (st.updated > 0) {
-            dirty = true; setSync('saving'); flush();
-          } else { setSync('synced'); }
-          doc.onSnapshot(function (s) {
-            var x = s.exists ? s.data() : null;
-            if (!x || x.by === sid || (x.updated || 0) <= st.updated) return;
-            adopt(x); history = []; pickIfStale(); render();
-          }, function () { setSync('error'); });
+    if (c && c.use) {
+      Promise.all([c.use('db'), c.use('user')]).then(function (r) {
+        var db = r[0], user = r[1];
+        return (user ? user.id() : Promise.resolve(null)).then(function (uid) {
+          if (!db || !uid) { setSync('local'); return; }
+          return setupDoc(db.doc('data/users/' + uid + '/vocab'));
         });
-      });
-    }).catch(function () { setSync(dbDoc ? 'error' : 'local'); });
+      }).catch(function () { setSync(dbDoc ? 'error' : 'local'); });
+      return;
+    }
+
+    setupDoc(httpBackend).catch(function () {
+      dbDoc = null;
+      setSync('local');
+    });
   }
 
   /* ---------- deck ---------- */

@@ -3,8 +3,10 @@
 services:
   patente:
     build: .
-    image: patente-guida:latest
+    image: nyttevaerdien/patente-guida:1.0.0
     container_name: patente-guida
     ports:
       - "${PORT:-8080}:80"
+    volumes:
+      - ./storage:/data
     restart: unless-stopped
