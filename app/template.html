@@ -1,0 +1,392 @@
+<title>Parole Patente B</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600&display=swap">
+<style>
+/* Layout: one centred column. A blue road-sign card (front) flips to a white
+   "pannello integrativo" (back). Two big verdict buttons sit under the card. */
+:root {
+  --bg: #edf1f5;
+  --surface: #ffffff;
+  --ink: #14202e;
+  --muted: #55636f;
+  --line: #cdd6df;
+  --sign: #0a4d9e;
+  --sign-ink: #ffffff;
+  --panel: #ffffff;
+  --panel-ink: #101820;
+  --know: #1b7f46;
+  --new: #c0392b;
+  --btn-ink: #ffffff;
+  --ok: #1b7f46;
+  --warn: #a86a00;
+  --focus: #0a4d9e;
+  --font-display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Barlow", "Helvetica Neue", Arial, system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e141b; --surface: #16202b; --ink: #e8eef5; --muted: #9aa8b6; --line: #2a3846;
+    --sign: #2f6fc0; --sign-ink: #ffffff; --panel: #1a2531; --panel-ink: #eef3f8;
+    --know: #1f8a4e; --new: #c8382a; --btn-ink: #ffffff; --ok: #4cc07f; --warn: #e0a23a; --focus: #7fb0ee;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e141b; --surface: #16202b; --ink: #e8eef5; --muted: #9aa8b6; --line: #2a3846;
+  --sign: #2f6fc0; --sign-ink: #ffffff; --panel: #1a2531; --panel-ink: #eef3f8;
+  --know: #1f8a4e; --new: #c8382a; --btn-ink: #ffffff; --ok: #4cc07f; --warn: #e0a23a; --focus: #7fb0ee;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.45;
+  padding-block: 20px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.app { max-width: 560px; margin: 0 auto; display: grid; gap: 16px; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+h1 { font-family: var(--font-display); font-weight: 600; font-size: 1.7rem; letter-spacing: 0.01em; margin: 0; line-height: 1.1; }
+.sub { color: var(--muted); font-size: 0.85rem; margin: 2px 0 0; }
+.sync { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
+.sync::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.sync[data-s="synced"]::before { background: var(--ok); }
+.sync[data-s="saving"]::before, .sync[data-s="error"]::before { background: var(--warn); }
+
+.stats { display: grid; gap: 8px; }
+.nums { display: flex; gap: 16px; flex-wrap: wrap; font-variant-numeric: tabular-nums; font-size: 0.9rem; color: var(--muted); }
+.nums b { font-size: 1.15rem; font-weight: 600; color: var(--ink); margin-right: 4px; }
+.nums .k b { color: var(--know); }
+.nums .n b { color: var(--new); }
+.bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; display: flex; }
+.bar i { display: block; height: 100%; }
+.bar .bk { background: var(--know); }
+.bar .bn { background: var(--new); }
+
+.levels { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.levels .lab { font-size: 0.8rem; color: var(--muted); margin-right: 2px; }
+.chip { border: 1.5px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 12px; cursor: pointer; font-size: 0.85rem; min-height: 32px; font-variant-numeric: tabular-nums; }
+.chip[aria-pressed="true"] { background: var(--sign); border-color: var(--sign); color: var(--sign-ink); }
+.legend { font-size: 0.78rem; color: var(--muted); margin: -8px 0 0; }
+
+.scene { perspective: 1400px; }
+.card { display: grid; position: relative; transform-style: preserve-3d; transition: transform 0.45s cubic-bezier(.3,.7,.2,1); cursor: pointer; border-radius: 16px; min-height: 300px; -webkit-tap-highlight-color: transparent; }
+.card[data-flipped="true"] { transform: rotateY(180deg); }
+.face { grid-area: 1 / 1; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 16px; padding: 22px; display: flex; flex-direction: column; min-width: 0; }
+.front { background: var(--sign); color: var(--sign-ink); align-items: center; justify-content: center; text-align: center; position: relative; }
+.front::before { content: ""; position: absolute; inset: 8px; border: 3px solid var(--sign-ink); border-radius: 11px; pointer-events: none; opacity: 0.95; }
+.word { font-family: var(--font-display); font-weight: 600; font-size: clamp(2.4rem, 11vw, 4rem); line-height: 1.05; letter-spacing: 0.01em; overflow-wrap: anywhere; padding: 0 12px; }
+.hint { position: absolute; bottom: 20px; left: 0; right: 0; font-size: 0.78rem; opacity: 0.8; letter-spacing: 0.04em; text-transform: uppercase; }
+.back { background: var(--panel); color: var(--panel-ink); border: 3px solid var(--panel-ink); transform: rotateY(180deg); gap: 14px; justify-content: center; }
+.bhead { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.bword { font-family: var(--font-display); font-weight: 600; font-size: 1.5rem; line-height: 1.1; }
+.pos { font-size: 0.78rem; opacity: 0.7; font-style: italic; }
+.tr { display: grid; gap: 6px; }
+.tr div { display: grid; grid-template-columns: 2.4em 1fr; gap: 8px; align-items: baseline; }
+.tr span.l { font-size: 0.7rem; letter-spacing: 0.08em; opacity: 0.6; font-weight: 600; }
+.tr p { margin: 0; font-size: 1.15rem; font-weight: 500; min-width: 0; overflow-wrap: anywhere; }
+.note { margin: 0; font-size: 0.85rem; opacity: 0.75; font-style: italic; }
+.ex { margin: 0; padding-top: 12px; border-top: 1.5px solid var(--line); font-size: 0.95rem; }
+.ex mark { background: transparent; color: inherit; font-weight: 600; box-shadow: inset 0 -0.38em 0 color-mix(in srgb, var(--sign) 28%, transparent); }
+.ex small { display: block; margin-top: 4px; font-size: 0.72rem; opacity: 0.6; }
+
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.act { border: 0; border-radius: 14px; min-height: 64px; padding: 8px 12px; cursor: pointer; color: var(--btn-ink); display: grid; place-items: center; line-height: 1.15; }
+.act strong { font-size: 1.25rem; font-weight: 600; }
+.act small { font-size: 0.75rem; opacity: 0.9; }
+.act.new { background: var(--new); }
+.act.know { background: var(--know); }
+.act:disabled { opacity: 0.4; cursor: default; }
+.act:active:not(:disabled) { transform: translateY(1px); }
+.row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 0.85rem; color: var(--muted); }
+.link { background: none; border: 0; padding: 6px 2px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; color: var(--muted); min-height: 32px; }
+.link:disabled { opacity: 0.4; cursor: default; text-decoration: none; }
+.keys { font-size: 0.75rem; color: var(--muted); }
+
+.done { background: var(--surface); border: 1.5px solid var(--line); border-radius: 16px; padding: 28px 22px; text-align: center; display: grid; gap: 10px; justify-items: center; }
+.done h2 { font-family: var(--font-display); font-weight: 600; font-size: 1.8rem; margin: 0; }
+.done p { margin: 0; color: var(--muted); }
+footer { font-size: 0.75rem; color: var(--muted); text-align: center; }
+
+@media (max-width: 420px) { .face { padding: 18px; } .tr p { font-size: 1.05rem; } }
+@media (prefers-reduced-motion: reduce) { .card { transition: none; } }
+</style>
+
+<div class="app">
+  <header>
+    <div>
+      <h1>Parole Patente B</h1>
+      <p class="sub">Rare words from the category B theory quiz</p>
+    </div>
+    <span class="sync" id="sync" data-s="local" role="status" aria-live="polite">Loading…</span>
+  </header>
+
+  <section class="stats" aria-label="Progress">
+    <div class="nums">
+      <span class="k"><b id="nKnown">0</b>known</span>
+      <span class="n"><b id="nNew">0</b>marked new</span>
+      <span><b id="nUnseen">0</b>not seen yet</span>
+    </div>
+    <div class="bar" aria-hidden="true"><i class="bk" id="barK"></i><i class="bn" id="barN"></i></div>
+  </section>
+
+  <section class="levels" id="levels" aria-label="Word levels"><span class="lab">Levels</span></section>
+  <p class="legend">A = most frequent in the quiz (50+ questions), D = rarest (1–2 questions).</p>
+
+  <main id="stage">
+    <div class="scene" id="scene">
+      <div class="card" id="card" role="button" tabindex="0" aria-label="Flip card" data-flipped="false">
+        <div class="face front" id="front">
+          <div class="word" id="fWord"></div>
+          <div class="hint">Tap to flip</div>
+        </div>
+        <div class="face back" id="back" aria-hidden="true">
+          <div class="bhead"><span class="bword" id="bWord"></span><span class="pos" id="bPos"></span></div>
+          <div class="tr">
+            <div><span class="l">EN</span><p id="bEn"></p></div>
+            <div><span class="l">RU</span><p id="bRu"></p></div>
+          </div>
+          <p class="note" id="bNote" hidden></p>
+          <p class="ex" id="bEx"></p>
+        </div>
+      </div>
+    </div>
+    <div class="done" id="done" hidden>
+      <h2>Deck finished</h2>
+      <p>You know every word in the selected levels. Add a level above, or start over.</p>
+      <button class="chip" type="button" id="resetDone">Reset progress</button>
+    </div>
+  </main>
+
+  <div class="actions">
+    <button class="act new" id="bNew" type="button"><strong>New</strong><small>show it again later</small></button>
+    <button class="act know" id="bKnow" type="button"><strong>Know</strong><small>remove from the deck</small></button>
+  </div>
+
+  <div class="row">
+    <button class="link" id="undo" type="button" disabled>Undo last</button>
+    <span id="left"></span>
+    <span class="keys">Space flip · ← new · → know</span>
+  </div>
+
+  <footer>
+    <span id="total"></span> words from the official MIT quiz list. Translations are AI-generated.
+    <button class="link" id="reset" type="button">Reset progress</button>
+  </footer>
+</div>
+
+<script id="data" type="application/json">/*DATA*/</script>
+<script>
+(function () {
+  var RAW = JSON.parse(document.getElementById('data').textContent);
+  var LEVELS = ['A', 'B', 'C', 'D'];
+  var WORDS = RAW.map(function (r) {
+    return { head: r[0], pos: r[1], en: r[2], ru: r[3], note: r[4], ex: r[5], exId: r[6], q: r[7],
+             lvl: r[7] >= 50 ? 'A' : r[7] >= 10 ? 'B' : r[7] >= 3 ? 'C' : 'D' };
+  });
+  var BY = new Map(WORDS.map(function (w) { return [w.head, w]; }));
+  var LS_KEY = 'parole-patente-b-v1';
+  var $ = function (id) { return document.getElementById(id); };
+
+  var st = { known: new Set(), learning: new Set(), levels: new Set(LEVELS), updated: 0 };
+  var current = null, flipped = false, history = [], backTimer = null;
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- persistence ---------- */
+  function serialize() {
+    return { known: Array.from(st.known), learning: Array.from(st.learning), levels: Array.from(st.levels), updated: st.updated, by: sid };
+  }
+  function adopt(d) {
+    var ok = function (a) { return (Array.isArray(a) ? a : []).filter(function (h) { return BY.has(h); }); };
+    st.known = new Set(ok(d.known));
+    st.learning = new Set(ok(d.learning));
+    st.learning.forEach(function (h) { if (st.known.has(h)) st.learning.delete(h); });
+    var lv = (Array.isArray(d.levels) ? d.levels : []).filter(function (l) { return LEVELS.indexOf(l) >= 0; });
+    st.levels = new Set(lv.length ? lv : LEVELS);
+    st.updated = d.updated || 0;
+    saveLocal();
+  }
+  function saveLocal() {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(serialize())); } catch (e) {}
+  }
+  function loadLocal() {
+    try { var raw = localStorage.getItem(LS_KEY); if (raw) adopt(JSON.parse(raw)); } catch (e) {}
+  }
+
+  var sid = Math.random().toString(36).slice(2);
+  var dbDoc = null, dirty = false, writing = false, timer = null;
+  var SYNC = { local: 'Saved in this browser only', saving: 'Saving…', synced: 'Synced to your account', error: 'Not synced, will retry' };
+  function setSync(s) { var el = $('sync'); el.dataset.s = s; el.textContent = SYNC[s]; }
+
+  function touch() {
+    st.updated = Date.now();
+    saveLocal();
+    if (!dbDoc) return;
+    dirty = true; setSync('saving');
+    clearTimeout(timer); timer = setTimeout(flush, 500);
+  }
+  function flush() {
+    if (writing || !dirty || !dbDoc) return;
+    writing = true; dirty = false;
+    dbDoc.set(serialize()).then(function () {
+      writing = false; setSync(dirty ? 'saving' : 'synced'); if (dirty) flush();
+    }, function () {
+      writing = false; setSync('error'); dirty = true;
+      clearTimeout(timer); timer = setTimeout(flush, 8000);
+    });
+  }
+
+  function initRemote() {
+    var c = window.claude;
+    if (!c || !c.use) { setSync('local'); return; }
+    Promise.all([c.use('db'), c.use('user')]).then(function (r) {
+      var db = r[0], user = r[1];
+      return (user ? user.id() : Promise.resolve(null)).then(function (uid) {
+        if (!db || !uid) { setSync('local'); return; }
+        var doc = db.doc('data/users/' + uid + '/vocab');
+        return doc.get().then(function (snap) {
+          var d = snap.exists ? snap.data() : null;
+          dbDoc = doc;
+          if (d && (d.updated || 0) >= st.updated) {
+            adopt(d); pickIfStale(); render(); setSync('synced');
+          } else if (st.updated > 0) {
+            dirty = true; setSync('saving'); flush();
+          } else { setSync('synced'); }
+          doc.onSnapshot(function (s) {
+            var x = s.exists ? s.data() : null;
+            if (!x || x.by === sid || (x.updated || 0) <= st.updated) return;
+            adopt(x); history = []; pickIfStale(); render();
+          }, function () { setSync('error'); });
+        });
+      });
+    }).catch(function () { setSync(dbDoc ? 'error' : 'local'); });
+  }
+
+  /* ---------- deck ---------- */
+  function pool() {
+    return WORDS.filter(function (w) { return st.levels.has(w.lvl) && !st.known.has(w.head); });
+  }
+  function pickIfStale() {
+    if (!current || st.known.has(current.head) || !st.levels.has(current.lvl)) next();
+  }
+  function next() {
+    var p = pool();
+    if (p.length > 1 && current) p = p.filter(function (w) { return w !== current; });
+    var wasFlipped = flipped;
+    current = p.length ? p[Math.floor(Math.random() * p.length)] : null;
+    setFlipped(false);
+    render(wasFlipped);
+  }
+  function mark(kind) {
+    if (!current) return;
+    var h = current.head;
+    var prev = st.known.has(h) ? 'known' : st.learning.has(h) ? 'learning' : null;
+    history.push({ h: h, prev: prev }); if (history.length > 100) history.shift();
+    if (kind === 'know') { st.known.add(h); st.learning.delete(h); }
+    else { st.learning.add(h); st.known.delete(h); }
+    touch(); next();
+  }
+  function undo() {
+    var a = history.pop(); if (!a) return;
+    st.known.delete(a.h); st.learning.delete(a.h);
+    if (a.prev === 'known') st.known.add(a.h);
+    if (a.prev === 'learning') st.learning.add(a.h);
+    var wasFlipped = flipped;
+    current = BY.get(a.h);
+    touch(); setFlipped(false); render(wasFlipped);
+  }
+  var resetArmed = false, resetTimer = null;
+  function reset(btn) {
+    if (!resetArmed) {
+      resetArmed = true; btn.textContent = 'Tap again to erase all progress';
+      clearTimeout(resetTimer);
+      resetTimer = setTimeout(function () { resetArmed = false; $('reset').textContent = 'Reset progress'; $('resetDone').textContent = 'Reset progress'; }, 4000);
+      return;
+    }
+    resetArmed = false; clearTimeout(resetTimer);
+    $('reset').textContent = 'Reset progress'; $('resetDone').textContent = 'Reset progress';
+    st.known.clear(); st.learning.clear(); history = []; touch(); current = null; next();
+  }
+
+  /* ---------- rendering ---------- */
+  function setFlipped(v) {
+    flipped = v;
+    var card = $('card');
+    card.dataset.flipped = String(v);
+    $('front').setAttribute('aria-hidden', String(v));
+    $('back').setAttribute('aria-hidden', String(!v));
+    card.setAttribute('aria-label', v ? 'Card showing translation. Press to flip back' : 'Flip card');
+  }
+  function fillCard(delayBack) {
+    var w = current; if (!w) return;
+    $('fWord').textContent = w.head;
+    var fill = function () {
+      $('bWord').textContent = w.head; $('bPos').textContent = w.pos;
+      $('bEn').textContent = w.en; $('bRu').textContent = w.ru;
+      var n = $('bNote'); n.textContent = w.note; n.hidden = !w.note;
+      var ex = $('bEx'); ex.textContent = '';
+      w.ex.split(/\[\[|\]\]/).forEach(function (part, i) {
+        if (i % 2) { var m = document.createElement('mark'); m.textContent = part; ex.appendChild(m); }
+        else ex.appendChild(document.createTextNode(part));
+      });
+      if (w.exId) { var s = document.createElement('small'); s.textContent = 'Official quiz question #' + w.exId; ex.appendChild(s); }
+    };
+    clearTimeout(backTimer);
+    if (reduce || !delayBack) fill(); else backTimer = setTimeout(fill, 260);
+  }
+
+  function render(delayBack) {
+    var inDeck = WORDS.filter(function (w) { return st.levels.has(w.lvl); });
+    var k = 0, l = 0;
+    inDeck.forEach(function (w) { if (st.known.has(w.head)) k++; else if (st.learning.has(w.head)) l++; });
+    var total = inDeck.length, u = total - k - l;
+    $('nKnown').textContent = k; $('nNew').textContent = l; $('nUnseen').textContent = u;
+    $('barK').style.width = (total ? k / total * 100 : 0) + '%';
+    $('barN').style.width = (total ? l / total * 100 : 0) + '%';
+    $('left').textContent = (total - k) + ' left in this deck';
+    $('total').textContent = WORDS.length.toLocaleString('en');
+    LEVELS.forEach(function (lv) { var b = $('chip' + lv); if (b) b.setAttribute('aria-pressed', String(st.levels.has(lv))); });
+    var has = !!current;
+    $('scene').hidden = !has; $('done').hidden = has;
+    $('bNew').disabled = !has; $('bKnow').disabled = !has;
+    $('undo').disabled = !history.length;
+    if (has) fillCard(delayBack);
+  }
+
+  /* ---------- wiring ---------- */
+  var lv = $('levels');
+  LEVELS.forEach(function (L) {
+    var n = WORDS.filter(function (w) { return w.lvl === L; }).length;
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip'; b.id = 'chip' + L; b.textContent = L + ' · ' + n;
+    b.addEventListener('click', function () {
+      if (st.levels.has(L)) { if (st.levels.size === 1) return; st.levels.delete(L); } else st.levels.add(L);
+      touch(); if (!current || !st.levels.has(current.lvl)) next(); else render();
+    });
+    lv.appendChild(b);
+  });
+  var card = $('card');
+  card.addEventListener('click', function () { if (current) setFlipped(!flipped); });
+  card.addEventListener('keydown', function (e) {
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); if (current) setFlipped(!flipped); }
+  });
+  $('bNew').addEventListener('click', function () { mark('new'); });
+  $('bKnow').addEventListener('click', function () { mark('know'); });
+  $('undo').addEventListener('click', undo);
+  $('reset').addEventListener('click', function () { reset($('reset')); });
+  $('resetDone').addEventListener('click', function () { reset($('resetDone')); });
+  document.addEventListener('keydown', function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === 'ArrowLeft') { e.preventDefault(); mark('new'); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); mark('know'); }
+    else if (e.key === ' ' && e.target === document.body) { e.preventDefault(); if (current) setFlipped(!flipped); }
+  });
+
+  loadLocal();
+  next();
+  initRemote();
+})();
+</script>
