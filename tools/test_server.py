@@ -66,6 +66,13 @@ def test_server():
             assert "Parole Patente B" in body
         print("[test] GET / OK.")
 
+        # Test GET /images/ab_0001.jpeg
+        with urllib.request.urlopen(f"{base_url}/images/ab_0001.jpeg") as resp:
+            assert resp.status == 200
+            assert resp.headers.get("Content-Type") == "image/jpeg"
+            assert len(resp.read()) > 0
+        print("[test] GET /images/ab_0001.jpeg OK.")
+
         # Test GET /api/progress (initially empty)
         with urllib.request.urlopen(f"{base_url}/api/progress") as resp:
             assert resp.status == 200

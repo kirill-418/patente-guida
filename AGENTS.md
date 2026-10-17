@@ -19,6 +19,7 @@ Study material for the Italian driving **theory exam, category B** (patente B): 
 | `data/ab-questions.json` | Structured B questions: `id, text, answer, chapter, group, image, page`. |
 | `data/vocab-final.json` | Final dictionary entries (input of the app build). |
 | `data/lemma-stats-ab.json` | Per-lemma stats for the B list: questions using it, general-Italian frequency rank, forms seen. |
+| `VERSION` | Current application version (`1.2.0`). |
 | `tools/` | The pipeline scripts (see below). |
 
 ## Source data
@@ -70,6 +71,7 @@ State: `known` (set of headwords), `learning` (set of headwords marked "New"), `
 - Changing levels re-draws only if the current card falls outside the new selection. Deck empty → "Deck finished" screen.
 - Counters shown (known / marked new / not seen yet / left) are computed **over the selected levels only**.
 - Keys: Space/Enter flips, ← = New, → = Know.
+- The card front shows the headword, an official quiz figure where needed, and the quiz question example for context. The card back shows translations (EN, RU), notes, and the official quiz answer (✅ VERO / ❌ FALSO) where the question was previously.
 - The card back is filled in ~260 ms after the flip-back so the next answer never flashes during the animation.
 
 ## Persistence and sync

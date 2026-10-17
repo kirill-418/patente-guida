@@ -22,7 +22,7 @@ const q = (id) => d.getElementById(id);
   const log = (...a) => console.log(...a);
   log('sync:', q('sync').textContent, '| front word:', q('fWord').textContent, '| chips:', [...d.querySelectorAll('.chip')].map(c => c.textContent).join(' '));
   log('stats:', q('nKnown').textContent, q('nNew').textContent, q('nUnseen').textContent, '| left:', q('left').textContent);
-  q('card').click(); log('flipped:', q('card').dataset.flipped, '| EN:', q('bEn').textContent, '| RU:', q('bRu').textContent, '| mark:', q('bEx').querySelector('mark')?.textContent);
+  q('card').click(); log('flipped:', q('card').dataset.flipped, '| EN:', q('bEn').textContent, '| RU:', q('bRu').textContent, '| mark:', q('fEx').querySelector('mark')?.textContent, '| answer:', q('bAnsBadge').textContent);
   const w1 = q('fWord').textContent;
   q('bKnow').click(); await sleep(700);
   log('after KNOW of', w1, '-> known', q('nKnown').textContent, 'new word:', q('fWord').textContent, 'flipped', q('card').dataset.flipped);

@@ -15,6 +15,7 @@ import threading
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 
+VERSION = "1.2.0"
 PORT = int(os.environ.get("PORT", "80"))
 BIND_HOST = os.environ.get("BIND_HOST", "0.0.0.0")
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
@@ -140,7 +141,7 @@ class AppRequestHandler(SimpleHTTPRequestHandler):
         path = parsed.path
 
         if path in ("/health", "/healthz"):
-            body = b'{"status":"ok"}'
+            body = json.dumps({"status": "ok", "version": VERSION}).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
@@ -163,6 +164,36 @@ class AppRequestHandler(SimpleHTTPRequestHandler):
             if not head_only:
                 self.wfile.write(body)
             return
+
+        if path.startswith("/images/"):
+            fname = os.path.basename(path)
+            possible_dirs = [
+                os.path.join(os.path.dirname(__file__), "..", "quiz", "images"),
+                os.path.join("/app", "images"),
+                os.path.join(os.path.dirname(__file__), "images"),
+            ]
+            img_file = None
+            for d in possible_dirs:
+                p = os.path.join(d, fname)
+                if os.path.isfile(p):
+                    img_file = p
+                    break
+            if img_file:
+                content_type = "image/webp" if fname.endswith(".webp") else "image/jpeg"
+                self.send_response(200)
+                self.send_header("Content-Type", content_type)
+                self.send_header("Cache-Control", "public, max-age=31536000, immutable")
+                self.send_cors_and_sec_headers()
+                with open(img_file, "rb") as f:
+                    data = f.read()
+                self.send_header("Content-Length", str(len(data)))
+                self.end_headers()
+                if not head_only:
+                    self.wfile.write(data)
+                return
+            else:
+                self.send_error(404, "Image not found")
+                return
 
         # Serve index.html for root and all other routes
         accept_encoding = self.headers.get("Accept-Encoding", "")

@@ -1,10 +1,13 @@
 # Parole Patente B: flip-card app with persistent progress sync.
 FROM python:3.12-alpine
 
+LABEL version="1.2.0"
+
 WORKDIR /app
 
 COPY docker/server.py /app/server.py
 COPY app/index.html /app/index.html
+COPY quiz/images /app/images
 
 ENV PORT=80 \
     DATA_DIR=/data \

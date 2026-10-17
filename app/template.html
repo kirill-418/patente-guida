@@ -1,4 +1,5 @@
 <title>Parole Patente B</title>
+<meta name="version" content="1.2.0">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600&display=swap">
 <style>
@@ -73,13 +74,18 @@ h1 { font-family: var(--font-display); font-weight: 600; font-size: 1.7rem; lett
 .legend { font-size: 0.78rem; color: var(--muted); margin: -8px 0 0; }
 
 .scene { perspective: 1400px; }
-.card { display: grid; position: relative; transform-style: preserve-3d; transition: transform 0.45s cubic-bezier(.3,.7,.2,1); cursor: pointer; border-radius: 16px; min-height: 300px; -webkit-tap-highlight-color: transparent; }
+.card { display: grid; position: relative; transform-style: preserve-3d; transition: transform 0.45s cubic-bezier(.3,.7,.2,1); cursor: pointer; border-radius: 16px; min-height: 320px; -webkit-tap-highlight-color: transparent; }
 .card[data-flipped="true"] { transform: rotateY(180deg); }
 .face { grid-area: 1 / 1; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 16px; padding: 22px; display: flex; flex-direction: column; min-width: 0; }
-.front { background: var(--sign); color: var(--sign-ink); align-items: center; justify-content: center; text-align: center; position: relative; }
+.front { background: var(--sign); color: var(--sign-ink); align-items: center; justify-content: center; text-align: center; position: relative; gap: 10px; padding: 22px 20px 38px; }
 .front::before { content: ""; position: absolute; inset: 8px; border: 3px solid var(--sign-ink); border-radius: 11px; pointer-events: none; opacity: 0.95; }
-.word { font-family: var(--font-display); font-weight: 600; font-size: clamp(2.4rem, 11vw, 4rem); line-height: 1.05; letter-spacing: 0.01em; overflow-wrap: anywhere; padding: 0 12px; }
-.hint { position: absolute; bottom: 20px; left: 0; right: 0; font-size: 0.78rem; opacity: 0.8; letter-spacing: 0.04em; text-transform: uppercase; }
+.word { font-family: var(--font-display); font-weight: 600; font-size: clamp(2rem, 8vw, 3.2rem); line-height: 1.05; letter-spacing: 0.01em; overflow-wrap: anywhere; padding: 0 8px; }
+.fimg { max-height: 80px; max-width: 130px; width: auto; height: auto; object-fit: contain; border-radius: 6px; background: #ffffff; padding: 3px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25); display: block; margin: 0 auto; }
+.fimg[hidden] { display: none !important; }
+.fex { margin: 0; font-size: 0.95rem; line-height: 1.38; opacity: 0.95; max-width: 480px; padding: 0 4px; }
+.fex mark { background: transparent; color: inherit; font-weight: 700; padding: 0; box-shadow: none; }
+.fex small { display: block; margin-top: 6px; font-size: 0.72rem; opacity: 0.75; font-variant-numeric: tabular-nums; }
+.hint { position: absolute; bottom: 12px; left: 0; right: 0; font-size: 0.75rem; opacity: 0.75; letter-spacing: 0.04em; text-transform: uppercase; }
 .back { background: var(--panel); color: var(--panel-ink); border: 3px solid var(--panel-ink); transform: rotateY(180deg); gap: 14px; justify-content: center; }
 .bhead { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .bword { font-family: var(--font-display); font-weight: 600; font-size: 1.5rem; line-height: 1.1; }
@@ -89,9 +95,11 @@ h1 { font-family: var(--font-display); font-weight: 600; font-size: 1.7rem; lett
 .tr span.l { font-size: 0.7rem; letter-spacing: 0.08em; opacity: 0.6; font-weight: 600; }
 .tr p { margin: 0; font-size: 1.15rem; font-weight: 500; min-width: 0; overflow-wrap: anywhere; }
 .note { margin: 0; font-size: 0.85rem; opacity: 0.75; font-style: italic; }
-.ex { margin: 0; padding-top: 12px; border-top: 1.5px solid var(--line); font-size: 0.95rem; }
-.ex mark { background: transparent; color: inherit; font-weight: 600; box-shadow: inset 0 -0.38em 0 color-mix(in srgb, var(--sign) 28%, transparent); }
-.ex small { display: block; margin-top: 4px; font-size: 0.72rem; opacity: 0.6; }
+.ans { margin: 0; padding-top: 12px; border-top: 1.5px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ans-label { font-size: 0.72rem; letter-spacing: 0.08em; opacity: 0.6; font-weight: 600; text-transform: uppercase; }
+.ans-badge { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-display); font-weight: 600; font-size: 1.15rem; letter-spacing: 0.02em; padding: 3px 12px; border-radius: 999px; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.ans-badge.vero { background: color-mix(in srgb, var(--know) 15%, transparent); color: var(--know); border: 1.5px solid var(--know); }
+.ans-badge.falso { background: color-mix(in srgb, var(--new) 15%, transparent); color: var(--new); border: 1.5px solid var(--new); }
 
 .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .act { border: 0; border-radius: 14px; min-height: 64px; padding: 8px 12px; cursor: pointer; color: var(--btn-ink); display: grid; place-items: center; line-height: 1.15; }
@@ -111,7 +119,7 @@ h1 { font-family: var(--font-display); font-weight: 600; font-size: 1.7rem; lett
 .done p { margin: 0; color: var(--muted); }
 footer { font-size: 0.75rem; color: var(--muted); text-align: center; }
 
-@media (max-width: 420px) { .face { padding: 18px; } .tr p { font-size: 1.05rem; } }
+@media (max-width: 420px) { .face { padding: 18px; } .front { padding: 18px 14px 34px 14px; gap: 8px; } .fimg { max-height: 68px; max-width: 110px; padding: 2px; } .fex { font-size: 0.88rem; } .tr p { font-size: 1.05rem; } }
 @media (prefers-reduced-motion: reduce) { .card { transition: none; } }
 </style>
 
@@ -141,6 +149,8 @@ footer { font-size: 0.75rem; color: var(--muted); text-align: center; }
       <div class="card" id="card" role="button" tabindex="0" aria-label="Flip card" data-flipped="false">
         <div class="face front" id="front">
           <div class="word" id="fWord"></div>
+          <img class="fimg" id="fImg" alt="Figura del quiz" hidden>
+          <p class="fex" id="fEx"></p>
           <div class="hint">Tap to flip</div>
         </div>
         <div class="face back" id="back" aria-hidden="true">
@@ -150,7 +160,10 @@ footer { font-size: 0.75rem; color: var(--muted); text-align: center; }
             <div><span class="l">RU</span><p id="bRu"></p></div>
           </div>
           <p class="note" id="bNote" hidden></p>
-          <p class="ex" id="bEx"></p>
+          <div class="ans" id="bAns">
+            <span class="ans-label">Quiz answer</span>
+            <span class="ans-badge" id="bAnsBadge"></span>
+          </div>
         </div>
       </div>
     </div>
@@ -173,18 +186,20 @@ footer { font-size: 0.75rem; color: var(--muted); text-align: center; }
   </div>
 
   <footer>
-    <span id="total"></span> words from the official MIT quiz list. Translations are AI-generated.
+    <span class="ver">v1.2.0</span> · <span id="total"></span> words from the official MIT quiz list. Translations are AI-generated.
     <button class="link" id="reset" type="button">Reset progress</button>
   </footer>
 </div>
 
+<script id="img-data" type="application/json">/*IMAGES*/</script>
 <script id="data" type="application/json">/*DATA*/</script>
 <script>
 (function () {
+  var IMAGES = JSON.parse(document.getElementById('img-data').textContent);
   var RAW = JSON.parse(document.getElementById('data').textContent);
   var LEVELS = ['A', 'B', 'C', 'D'];
   var WORDS = RAW.map(function (r) {
-    return { head: r[0], pos: r[1], en: r[2], ru: r[3], note: r[4], ex: r[5], exId: r[6], q: r[7],
+    return { head: r[0], pos: r[1], en: r[2], ru: r[3], note: r[4], ex: r[5], exId: r[6], q: r[7], ans: r[8], img: r[9] || '',
              lvl: r[7] >= 50 ? 'A' : r[7] >= 10 ? 'B' : r[7] >= 3 ? 'C' : 'D' };
   });
   var BY = new Map(WORDS.map(function (w) { return [w.head, w]; }));
@@ -377,16 +392,40 @@ footer { font-size: 0.75rem; color: var(--muted); text-align: center; }
   function fillCard(delayBack) {
     var w = current; if (!w) return;
     $('fWord').textContent = w.head;
+    var fImg = $('fImg');
+    var imgSrc = (w.img && IMAGES[w.img]) || (w.img ? '/images/' + w.img : '');
+    if (imgSrc) {
+      fImg.src = imgSrc;
+      fImg.hidden = false;
+    } else {
+      fImg.removeAttribute('src');
+      fImg.hidden = true;
+    }
+    var fEx = $('fEx'); fEx.textContent = '';
+    if (w.ex) {
+      w.ex.split(/\[\[|\]\]/).forEach(function (part, i) {
+        if (i % 2) { var m = document.createElement('mark'); m.textContent = part; fEx.appendChild(m); }
+        else fEx.appendChild(document.createTextNode(part));
+      });
+      if (w.exId) { var s = document.createElement('small'); s.textContent = '#' + w.exId; fEx.appendChild(s); }
+      fEx.hidden = false;
+    } else {
+      fEx.hidden = true;
+    }
     var fill = function () {
       $('bWord').textContent = w.head; $('bPos').textContent = w.pos;
       $('bEn').textContent = w.en; $('bRu').textContent = w.ru;
       var n = $('bNote'); n.textContent = w.note; n.hidden = !w.note;
-      var ex = $('bEx'); ex.textContent = '';
-      w.ex.split(/\[\[|\]\]/).forEach(function (part, i) {
-        if (i % 2) { var m = document.createElement('mark'); m.textContent = part; ex.appendChild(m); }
-        else ex.appendChild(document.createTextNode(part));
-      });
-      if (w.exId) { var s = document.createElement('small'); s.textContent = 'Official quiz question #' + w.exId; ex.appendChild(s); }
+      var ansWrap = $('bAns');
+      if (w.ans) {
+        ansWrap.hidden = false;
+        var badge = $('bAnsBadge');
+        var isVero = w.ans === 'VERO';
+        badge.className = 'ans-badge ' + (isVero ? 'vero' : 'falso');
+        badge.textContent = isVero ? '✅ VERO' : '❌ FALSO';
+      } else {
+        ansWrap.hidden = true;
+      }
     };
     clearTimeout(backTimer);
     if (reduce || !delayBack) fill(); else backTimer = setTimeout(fill, 260);

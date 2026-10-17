@@ -2,3 +2,4 @@
 !app/index.html
 !docker/server.py
 !docker/nginx.conf
+!quiz/images/

@@ -3,7 +3,7 @@
 services:
   patente:
     build: .
-    image: nyttevaerdien/patente-guida:1.0.0
+    image: nyttevaerdien/patente-guida:1.2.0
     container_name: patente-guida
     ports:
       - "${PORT:-8080}:80"
