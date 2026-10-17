@@ -86,7 +86,7 @@ def parse(pdf, imgdir, imgprefix):
 if __name__ == '__main__':
     pdf, imgdir, prefix, out = sys.argv[1:5]
     rows = parse(pdf, imgdir, prefix)
-    json.dump(rows, open(out, 'w'), ensure_ascii=False)
+    json.dump(rows, open(out, 'w'), ensure_ascii=False, indent=2)
     ids = [r['id'] for r in rows]
     print(pdf, 'rows', len(rows), 'unique', len(set(ids)),
           'noanswer', sum(r['answer'] is None for r in rows),

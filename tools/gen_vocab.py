@@ -91,4 +91,4 @@ import os; print(os.path.getsize(OUT)//1024, 'KB')
 for w in ['allorché','restringimento','omologare','sovraccarico','sovrannumero','risarcimento','smaltimento']:
     hit = [e for e in final if e['head'].lower()==w or w in [f.lower() for f in e['forms']]]
     print(w, [(e['head'], e['q'], e['en'], e['ru']) for e in hit])
-json.dump(final, open('vocab/final.json','w'), ensure_ascii=False)
+json.dump(final, open('vocab/final.json','w'), ensure_ascii=False, indent=2)

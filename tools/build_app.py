@@ -18,7 +18,10 @@ for e in final:
     rows.append([e['head'], e['pos'], e['en'], e['ru'], e['note'] or '', marked, exid, e['q']])
 
 payload = json.dumps(rows, ensure_ascii=False, separators=(',', ':')).replace('<', '\\u003c')
-open('app/data.json', 'w').write(payload)
+# app/data.json is the readable copy (one word per line); index.html embeds the compact payload
+pretty = '[\n' + ',\n'.join('  ' + json.dumps(r, ensure_ascii=False, separators=(', ', ': ')).replace('<', '\\u003c') for r in rows) + '\n]\n'
+assert json.loads(pretty) == json.loads(payload)
+open('app/data.json', 'w').write(pretty)
 tpl = open('app/template.html').read()
 assert tpl.count('/*DATA*/') == 1
 open('app/index.html', 'w').write(tpl.replace('/*DATA*/', payload))

@@ -17,9 +17,9 @@ for L in cands:
     for w in f[L]: idx |= form2q[w]
     ex = sorted(idx, key=lambda i: len(Q[i][1]))[:2]
     items.append(dict(lemma=L, questions=q[L], forms=sorted(f[L], key=lambda w: -f[L][w]), examples=[dict(id=Q[i][0], text=Q[i][1]) for i in ex]))
-json.dump(items, open('vocab/all_items.json', 'w'), ensure_ascii=False, indent=0)
+json.dump(items, open('vocab/all_items.json', 'w'), ensure_ascii=False, indent=2)
 N = 9; size = -(-len(items) // N)
 for k in range(N):
     chunk = items[k*size:(k+1)*size]
-    json.dump(chunk, open(f'vocab/in/chunk{k+1}.json', 'w'), ensure_ascii=False, indent=0)
+    json.dump(chunk, open(f'vocab/in/chunk{k+1}.json', 'w'), ensure_ascii=False, indent=2)
     print(k+1, len(chunk), chunk[0]['lemma'], chunk[0]['questions'], '...', chunk[-1]['lemma'], chunk[-1]['questions'])

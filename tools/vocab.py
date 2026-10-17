@@ -21,7 +21,7 @@ for q in qs:
         if L not in seen: qcount[L] += 1; seen.add(L)
 print('distinct lemmas', len(qcount))
 import json
-json.dump({'qcount': qcount, 'rank': {k: rank.get(k) for k in qcount}, 'forms': {k: dict(v) for k, v in forms.items()}}, open('out/vocab.json', 'w'), ensure_ascii=False)
+json.dump({'qcount': qcount, 'rank': {k: rank.get(k) for k in qcount}, 'forms': {k: dict(v) for k, v in forms.items()}}, open('out/vocab.json', 'w'), ensure_ascii=False, indent=2)
 def bucket(L):
     r = rank.get(L); return 'absent' if r is None else ('<=3000' if r<=3000 else '<=5000' if r<=5000 else '<=10000' if r<=10000 else '<=20000' if r<=20000 else '<=50000')
 b = collections.Counter(bucket(L) for L in qcount); print(b)
