@@ -1,7 +1,7 @@
 # Parole Patente B: flip-card app with persistent progress sync.
 FROM python:3.12-alpine
 
-LABEL version="1.2.0"
+LABEL version="1.3.0"
 
 WORKDIR /app
 

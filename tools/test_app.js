@@ -39,13 +39,17 @@ const q = (id) => d.getElementById(id);
     if (i % 50 === 0) await sleep(5);
   }
   log('300 actions: known-shown-again =', dupes, '| known', q('nKnown').textContent, '| marked new', q('nNew').textContent);
-  // new words reappear?
+  // priority: unseen words have priority over marked new words
   let seenNew = 0; for (let i = 0; i < 400; i++) { const c = q('fWord').textContent; if (newSet.has(c)) seenNew++; q('bNew').click(); }
-  log('new words reappear in later draws:', seenNew > 0, seenNew);
+  log('unseen words have priority (seenNew == 0):', seenNew === 0, seenNew);
   // levels
   [...d.querySelectorAll('.chip')].forEach(c => { if (/^[BCD] /.test(c.textContent)) c.click(); });
   log('only A selected; pressed:', [...d.querySelectorAll('.chip')].map(c => c.getAttribute('aria-pressed')).join(','));
   const lastChip = d.getElementById('chipA'); lastChip.click(); log('cannot deselect last level ->', lastChip.getAttribute('aria-pressed'));
+  while (parseInt(q('nUnseen').textContent, 10) > 0) q('bNew').click();
+  let learningDraws = 0;
+  for (let i = 0; i < 10; i++) { q('bNew').click(); if (q('fWord').textContent) learningDraws++; }
+  log('new words reappear once all unseen shown:', learningDraws > 0);
   await sleep(700);
   log('writes to db:', writes.length, '| last write keys:', Object.keys(writes.at(-1)), 'known', writes.at(-1).known.length, 'learning', writes.at(-1).learning.length, '| sync:', q('sync').textContent);
   // reload: new window with the same store should restore

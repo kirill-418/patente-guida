@@ -19,7 +19,7 @@ Study material for the Italian driving **theory exam, category B** (patente B): 
 | `data/ab-questions.json` | Structured B questions: `id, text, answer, chapter, group, image, page`. |
 | `data/vocab-final.json` | Final dictionary entries (input of the app build). |
 | `data/lemma-stats-ab.json` | Per-lemma stats for the B list: questions using it, general-Italian frequency rank, forms seen. |
-| `VERSION` | Current application version (`1.2.0`). |
+| `VERSION` | Current application version (`1.3.0`). |
 | `tools/` | The pipeline scripts (see below). |
 
 ## Source data
@@ -64,7 +64,7 @@ Translations were written by LLM subagents, one chunk of ~190 words each (`vocab
 State: `known` (set of headwords), `learning` (set of headwords marked "New"), `levels` (subset of A–D, default all, never empty).
 
 - **Deck** = every word whose level is selected **and** that is not in `known`. So the deck contains both never-seen words and words marked New.
-- **Draw** = uniform random over the deck. If the deck has more than one word, the card just shown is excluded from the next draw (no immediate repeat). There is no spaced-repetition weighting and no frequency weighting: a tier-D word is as likely as a tier-A word when both levels are on.
+- **Draw** = words not shown yet have priority. If there are any unseen words in the selected levels, the draw is uniform random over those unseen words only. Once every word in the selected levels has been shown at least once (all remaining cards are marked New), draws pick from the learning cards. If the candidate pool has more than one word, the card just shown is excluded from the next draw (no immediate repeat).
 - **Know** (green): add to `known`, remove from `learning` → never drawn again (until Reset or Undo).
 - **New** (red): add to `learning`, remove from `known` → stays in the deck and can come back at any later draw, including the very next one if the deck is small.
 - **Undo** restores the previous status of the last ≤ 100 actions and shows that card again. Undo history is in memory only.

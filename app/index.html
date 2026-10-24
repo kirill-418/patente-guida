@@ -7,7 +7,7 @@
 </head>
 <body>
 <title>Parole Patente B</title>
-<meta name="version" content="1.2.0">
+<meta name="version" content="1.3.0">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600&display=swap">
 <style>
@@ -194,7 +194,7 @@ footer { font-size: 0.75rem; color: var(--muted); text-align: center; }
   </div>
 
   <footer>
-    <span class="ver">v1.2.0</span> · <span id="total"></span> words from the official MIT quiz list. Translations are AI-generated.
+    <span class="ver">v1.3.0</span> · <span id="total"></span> words from the official MIT quiz list. Translations are AI-generated.
     <button class="link" id="reset" type="button">Reset progress</button>
   </footer>
 </div>
@@ -352,8 +352,10 @@ footer { font-size: 0.75rem; color: var(--muted); text-align: center; }
   function next() {
     var p = pool();
     if (p.length > 1 && current) p = p.filter(function (w) { return w !== current; });
+    var unseen = p.filter(function (w) { return !st.learning.has(w.head); });
+    var cand = unseen.length ? unseen : p;
     var wasFlipped = flipped;
-    current = p.length ? p[Math.floor(Math.random() * p.length)] : null;
+    current = cand.length ? cand[Math.floor(Math.random() * cand.length)] : null;
     setFlipped(false);
     render(wasFlipped);
   }
